@@ -1,3 +1,6 @@
+import threading
+import time
+
 from Mechanic.Mood import MoodChanger
 from Mechanic.ObserverPattern.Publisher import Publisher
 from Mechanic.ObserverPattern.Subscriber import Subscriber
@@ -41,13 +44,26 @@ class ModelMechanic(Subscriber, Publisher):
         self._weekTimerVar.attach(self)
         self._moodChangerVar.attach(self)
 
-    def make_mood_worse(self, amount_of_worse_units):
+    def make_mood_worse(self, amount_of_worse_units: int):
+        thread = threading.Thread(target=self.mood_worse_thread, args=(amount_of_worse_units,))
+        thread.start()
+
+    def mood_worse_thread(self, amount_of_worse_units: int):
         for i in range(amount_of_worse_units):
+            time.sleep(0.1)
             self._moodChangerVar.decrease_mood()
 
-    def make_mood_better(self, amount_of_better_units):
-        for i in range(amount_of_better_units):
+    def mood_better_thread(self, amount_of_worse_units: int):
+        for i in range(amount_of_worse_units):
+            time.sleep(0.1)
             self._moodChangerVar.increase_mood()
+
+    def make_mood_better(self, amount_of_better_units: int):
+        thread = threading.Thread(target=self.mood_better_thread, args=(amount_of_better_units,))
+        thread.start()
 
     def start(self):
         self._weekTimerVar.start()
+
+    def stop(self):
+        self._weekTimerVar.stop()

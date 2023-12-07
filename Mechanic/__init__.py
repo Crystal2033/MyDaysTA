@@ -1,19 +1,15 @@
 from Mechanic.ModelMechanic import ModelMechanic
-# from Mechanic.WeekTimer import WeekTimer, TimerSpeedStates
 
 if __name__ == "__main__":
-    # timer = WeekTimer(timer_init_speed=TimerSpeedStates.NORMAL)
-    # timer.start()
-    # while True:
-    #     end_state = input()
-    #     if end_state.lower() == "n":
-    #         timer.change_timer_speed_state(TimerSpeedStates.NORMAL)
-    #     elif end_state.lower() == "f":
-    #         timer.change_timer_speed_state(TimerSpeedStates.FAST)
-    #     elif end_state.lower() == "s":
-    #         timer.change_timer_speed_state(TimerSpeedStates.SLOW)
-    #     elif end_state.lower() == "e":
-    #         timer.change_timer_speed_state(TimerSpeedStates.STOP)
-    #         break
     mech = ModelMechanic()
     mech.start()
+    while True:
+        end_state = input()
+        split_res = end_state.split(" ")
+        if split_res[0].lower() == "u":
+            mech.make_mood_better(int(split_res[1]))
+        elif split_res[0].lower() == "d":
+            mech.make_mood_worse(int(split_res[1]))
+        else:
+            mech.stop()
+            break
