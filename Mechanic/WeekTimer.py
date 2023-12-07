@@ -1,4 +1,5 @@
 import threading
+import time
 from enum import Enum
 from itertools import cycle
 from time import sleep
@@ -45,6 +46,11 @@ class WeekTimer:
     def change_timer_speed_state(self, new_speed_state: TimerSpeedStates):
         self._timerSpeedState = new_speed_state
 
+    def get_current_day(self):
+        return self._currentDayOfWeek\
+
+    def get_current_time(self):
+        return time.strftime("%H:%M", time.gmtime(self._currentHours * 3600 + self._currentMinutes * 60))
     def increase_timer(self):
         sleep_ms_by_timer_speed_states = {TimerSpeedStates.SLOW: 0.2,
                                           TimerSpeedStates.NORMAL: 0.05,
@@ -57,4 +63,4 @@ class WeekTimer:
                 if self._currentHours == 0:
                     self._currentDayOfWeek = next(self._possibleDaysOfWeek)
 
-            print(f'{self._currentHours:02d}:{self._currentMinutes:02d} at {self._currentDayOfWeek.name}')
+            print(f'{self.get_current_time()} at {self._currentDayOfWeek.name}')
