@@ -4,6 +4,8 @@ from enum import Enum
 from itertools import cycle
 from time import sleep
 
+from Mechanic.ObserverPattern.Publisher import Publisher
+
 
 class TimerSpeedStates(Enum):
     STOP = 0,
@@ -22,9 +24,10 @@ class DaysPerWeek(Enum):
     SATURDAY = 6
 
 
-class WeekTimer:
+class WeekTimer(Publisher):
 
     def __init__(self, timer_init_speed: TimerSpeedStates):
+        super().__init__()
         self._timerSpeedState = timer_init_speed
         self._possibleHours = cycle([i for i in range(24)])
         self._possibleMinutes = cycle([i for i in range(60)])
@@ -47,10 +50,11 @@ class WeekTimer:
         self._timerSpeedState = new_speed_state
 
     def get_current_day(self):
-        return self._currentDayOfWeek\
+        return self._currentDayOfWeek
 
     def get_current_time(self):
         return time.strftime("%H:%M", time.gmtime(self._currentHours * 3600 + self._currentMinutes * 60))
+
     def increase_timer(self):
         sleep_ms_by_timer_speed_states = {TimerSpeedStates.SLOW: 0.2,
                                           TimerSpeedStates.NORMAL: 0.05,
@@ -63,4 +67,5 @@ class WeekTimer:
                 if self._currentHours == 0:
                     self._currentDayOfWeek = next(self._possibleDaysOfWeek)
 
-            print(f'{self.get_current_time()} at {self._currentDayOfWeek.name}')
+            self.notify()
+            # print(f'{self.get_current_time()} at {self._currentDayOfWeek.name}')
