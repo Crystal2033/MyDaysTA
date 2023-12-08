@@ -13,4 +13,7 @@ class Publisher(ABC):
 
     def notify(self):
         for observer in self.__observers:
-            observer.update()
+            observer.updateByNotify()
+
+    def clear_all_observers(self):
+        self.__observers.clear()

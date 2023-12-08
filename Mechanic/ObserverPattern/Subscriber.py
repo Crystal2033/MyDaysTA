@@ -3,5 +3,5 @@ from abc import ABC, abstractmethod
 
 class Subscriber(ABC):
     @abstractmethod
-    def update(self):
+    def updateByNotify(self):
         pass

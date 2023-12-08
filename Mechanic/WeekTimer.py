@@ -48,6 +48,7 @@ class WeekTimer(Publisher):
 
     def stop(self):
         self.change_timer_speed_state(TimerSpeedStates.STOP)
+        self.clear_all_observers()
 
     def change_timer_speed_state(self, new_speed_state: TimerSpeedStates):
         self._timerSpeedState = new_speed_state

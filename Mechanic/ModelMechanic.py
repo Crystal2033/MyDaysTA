@@ -17,7 +17,7 @@ from Mechanic.states.WednesdayState import WednesdayState
 # week timer notify -> mech notify -> UI
 # mood changes notify -> mech notify -> UI
 class ModelMechanic(Subscriber, Publisher):
-    def update(self):
+    def updateByNotify(self):
         print("-----------------------------------------------")
         self._states[self._weekTimerVar.get_current_day()].get_state(
             self._weekTimerVar.get_current_time(),
@@ -25,7 +25,7 @@ class ModelMechanic(Subscriber, Publisher):
         )
         print("-----------------------------------------------")
 
-        # self.notify()  # for future UI
+        self.notify()  # for future UI
 
     def __init__(self):
         super().__init__()
@@ -62,8 +62,12 @@ class ModelMechanic(Subscriber, Publisher):
         thread = threading.Thread(target=self.mood_better_thread, args=(amount_of_better_units,))
         thread.start()
 
+    def get_current_time_and_date(self):
+        return self._weekTimerVar.get_current_time() + " " + self._weekTimerVar.get_current_day().name
+
     def start(self):
         self._weekTimerVar.start()
 
     def stop(self):
+        self.clear_all_observers()
         self._weekTimerVar.stop()
