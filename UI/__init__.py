@@ -5,8 +5,7 @@ import timeit
 import tkinter as tk
 
 import arcade
-from arcade.examples.camera_platform import TILE_SCALING
-from arcade.examples.sprite_move_animation import CHARACTER_SCALING
+from UI.Player import PlayerCharacter
 
 from Mechanic import ModelMechanic
 from Mechanic.ObserverPattern.Subscriber import Subscriber
@@ -21,6 +20,20 @@ SCREEN_WIDTH = int(screen_width / 1.5)
 SCREEN_HEIGHT = int(screen_height / 1.5)
 SCREEN_TITLE = "Paul`s days"
 PLAYER_MOVEMENT_SPEED = 5
+
+# Constants used to scale our sprites from their original size
+TILE_SCALING = 0.5
+CHARACTER_SCALING = TILE_SCALING * 2
+COIN_SCALING = TILE_SCALING
+SPRITE_PIXEL_SIZE = 128
+GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
+
+# Movement speed of player, in pixels per frame
+GRAVITY = 1.5
+PLAYER_JUMP_SPEED = 30
+
+PLAYER_START_X = SPRITE_PIXEL_SIZE * TILE_SCALING * 2
+PLAYER_START_Y = SPRITE_PIXEL_SIZE * TILE_SCALING * 1
 
 
 class UIViewInfo:
@@ -55,7 +68,6 @@ class MyGame(arcade.Window):
         super().close()
         self.view_changer.stop()
 
-
     def __init__(self):
         # Call the parent class and set up the window
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
@@ -78,7 +90,6 @@ class MyGame(arcade.Window):
         self.view_changer = ViewChanger(self.ui_view_info)
 
         # --- Variables for our statistics
-
         # Time for on_update
         self.processing_time = 0
 
@@ -106,15 +117,22 @@ class MyGame(arcade.Window):
         # Initialize Scene
         self.scene = arcade.Scene()
 
-        # Create the Sprite lists
-        self.scene.add_sprite_list("Player")
-        self.scene.add_sprite_list("Walls", use_spatial_hash=True)
+        # Set up the player, specifically placing it at these coordinates.
 
-        image_source = ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png"
-        self.player_sprite = arcade.Sprite(image_source, CHARACTER_SCALING)
-        self.player_sprite.center_x = 64
-        self.player_sprite.center_y = 128
+        self.player_sprite = PlayerCharacter()
+        self.player_sprite.center_x = PLAYER_START_X
+        self.player_sprite.center_y = PLAYER_START_Y
         self.scene.add_sprite("Player", self.player_sprite)
+
+        # Create the Sprite lists
+        #self.scene.add_sprite_list("Player")
+        #self.scene.add_sprite_list("Walls", use_spatial_hash=True)
+
+        # image_source = ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png"
+        # self.player_sprite = arcade.Sprite(image_source, CHARACTER_SCALING)
+        # self.player_sprite.center_x = 64
+        # self.player_sprite.center_y = 128
+        # self.scene.add_sprite("Player", self.player_sprite)
 
         for x in range(0, 1250, 64):
             wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
@@ -138,7 +156,7 @@ class MyGame(arcade.Window):
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite, self.scene.get_sprite_list("Walls")
         )
-        self.view_changer.start_changes()
+        # self.view_changer.start_changes()
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
@@ -174,6 +192,11 @@ class MyGame(arcade.Window):
         start_time = timeit.default_timer()
         # Move the player with the physics engine
         self.physics_engine.update()
+
+        # Update Animations
+        self.scene.update_animation(
+            delta_time, ["Player"]
+        )
 
         self.center_camera_to_player()
 
