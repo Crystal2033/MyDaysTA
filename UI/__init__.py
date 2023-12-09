@@ -16,21 +16,19 @@ screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 
 # Constants
-SCREEN_WIDTH = int(screen_width / 1.5)
-SCREEN_HEIGHT = int(screen_height / 1.5)
+SCREEN_WIDTH = int(screen_width / 1.3)
+SCREEN_HEIGHT = int(screen_height / 1.3)
 SCREEN_TITLE = "Paul`s days"
-PLAYER_MOVEMENT_SPEED = 2
+PLAYER_MOVEMENT_SPEED = 10
 
 # Constants used to scale our sprites from their original size
 TILE_SCALING = 0.5
-CHARACTER_SCALING = TILE_SCALING * 2
-COIN_SCALING = TILE_SCALING
+
 SPRITE_PIXEL_SIZE = 128
 GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
-VIEWPORT_MARGIN = 100
 
-PLAYER_START_X = 64
-PLAYER_START_Y = 128
+PLAYER_START_X = 360
+PLAYER_START_Y = 150
 
 
 class UIViewInfo:
@@ -70,6 +68,15 @@ class MyGame(arcade.Window):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         # Separate variable that holds the player sprite
         self.player_sprite = None
+
+        # --- Related to paths
+        # List of points that makes up a path between two points
+        self.path = None
+        # List of points we checked to see if there is a barrier there
+        self.barrier_list = None
+
+        self.destination_point = (988, 595)
+
         # Our Scene Object
         self.scene = None
 
@@ -81,7 +88,7 @@ class MyGame(arcade.Window):
         self.mouse_pos_x = PLAYER_START_X
         self.mouse_pos_y = PLAYER_START_X
 
-        self.current_camera_scale = 0.4
+        self.current_camera_scale = 1#0.25
 
         # Our physics engine
         self.physics_engine = None
@@ -109,7 +116,6 @@ class MyGame(arcade.Window):
         # Set up the Camera
         self.camera = arcade.Camera(self.width, self.height)
 
-
         # Set up the GUI Camera
         self.gui_camera = arcade.Camera(self.width, self.height)
 
@@ -119,6 +125,9 @@ class MyGame(arcade.Window):
                 "use_spatial_hash": True,
             },
             "Road": {
+                "use_spatial_hash": True
+            },
+            "GroundUnderRails": {
                 "use_spatial_hash": True
             }
         }
@@ -135,12 +144,42 @@ class MyGame(arcade.Window):
         self.player_sprite.center_y = PLAYER_START_Y
         self.scene.add_sprite("Player", self.player_sprite)
 
-
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite, self.scene.get_sprite_list("Walls")
         )
         self.view_changer.start_changes()
+
+        self.path = None
+        # Grid size for calculations. The smaller the grid, the longer the time
+        # for calculations. Make sure the grid aligns with the sprite wall grid,
+        # or some openings might be missed.
+        grid_size = 16
+
+        # Calculate the playing field size. We can't generate paths outside of
+        # this.
+        playing_field_left_boundary = -SCREEN_WIDTH
+        playing_field_right_boundary = SCREEN_WIDTH
+        playing_field_top_boundary = SCREEN_HEIGHT
+        playing_field_bottom_boundary = -SCREEN_HEIGHT
+
+        # This calculates a list of barriers. By calculating it here in the
+        # init, we are assuming this list does not change. In this example,
+        # our walls don't move, so that is ok. If we want moving barriers (such as
+        # moving platforms or enemies) we need to recalculate. This can be an
+        # time-intensive process depending on the playing field size and grid
+        # resolution.
+
+        # Note: If the enemy sprites are the same size, we only need to calculate
+        # one of these. We do NOT need a different one for each enemy. The sprite
+        # is just used for a size calculation.
+        self.barrier_list = arcade.AStarBarrierList(self.player_sprite,
+                                                    self.scene.get_sprite_list("Walls"),
+                                                    grid_size,
+                                                    playing_field_left_boundary,
+                                                    playing_field_right_boundary,
+                                                    playing_field_bottom_boundary,
+                                                    playing_field_top_boundary)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
@@ -173,19 +212,19 @@ class MyGame(arcade.Window):
         is_need_to_change_pos = False
 
         if self.mouse_pos_y < float(SCREEN_HEIGHT) * 0.1:
-            self.camera_center_y -= 3
+            self.camera_center_y -= 10
             is_need_to_change_pos = True
 
         if self.mouse_pos_y > float(SCREEN_HEIGHT) * 0.9:
-            self.camera_center_y += 3
+            self.camera_center_y += 10
             is_need_to_change_pos = True
 
         if self.mouse_pos_x < float(SCREEN_WIDTH) * 0.1:
-            self.camera_center_x -= 3
+            self.camera_center_x -= 10
             is_need_to_change_pos = True
 
         if self.mouse_pos_x > float(SCREEN_WIDTH) * 0.9:
-            self.camera_center_x += 3
+            self.camera_center_x += 10
             is_need_to_change_pos = True
 
         if ((float(SCREEN_HEIGHT) * 0.1 < self.mouse_pos_y < float(SCREEN_HEIGHT) * 0.9)
@@ -193,7 +232,7 @@ class MyGame(arcade.Window):
             is_need_to_change_pos = False
 
         if is_need_to_change_pos:
-            self.camera.move_to(pyglet.math.Vec2(self.camera_center_x, self.camera_center_y), 0.3)
+            self.camera.move_to(pyglet.math.Vec2(self.camera_center_x, self.camera_center_y), 1)
 
     def on_update(self, delta_time):
         """Movement and game logic"""
@@ -205,7 +244,17 @@ class MyGame(arcade.Window):
             delta_time, ["Player"]
         )
 
-        self.move_camera_if_need()
+        # Set to True if we can move diagonally. Note that diagonal movement
+        # might cause the enemy to clip corners.
+        self.path = arcade.astar_calculate_path((self.player_sprite.center_x, self.player_sprite.center_y),
+                                                self.destination_point,
+                                                self.barrier_list,
+                                                diagonal_movement=False)
+        print(self.path, "->", self.destination_point)
+
+    def move_player_by_path(self):
+        if self.path:
+            pass
 
     def on_draw(self):
         """Render the screen."""
@@ -213,7 +262,7 @@ class MyGame(arcade.Window):
 
         # Activate our Camera
         self.camera.use()
-        self.camera.scale = self.current_camera_scale
+
 
         self.scene.draw()
         # Activate the GUI camera before drawing GUI elements
@@ -236,6 +285,25 @@ class MyGame(arcade.Window):
             18,
         )
 
+        arcade.draw_text(
+            f"State: {self.ui_view_info.current_state_text_view}",
+            900,
+            10,
+            arcade.csscolor.BLACK,
+            18,
+        )
+
+        if self.path:
+            self.move_path_by_camera()
+            arcade.draw_line_strip(self.path, arcade.color.BLUE, 2)
+        self.move_camera_if_need()
+        self.camera.scale = self.current_camera_scale
+
+    def move_path_by_camera(self):
+        for i in range(len(self.path)):
+            self.path[i] = (self.path[i][0] - self.camera_center_x,
+                            self.path[i][1] - self.camera_center_y)
+
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         super().on_mouse_press(x, y, button, modifiers)
         print(f"Mouse ({x},{y})")
@@ -245,12 +313,6 @@ class MyGame(arcade.Window):
         screen_center_y = self.player_sprite.center_y - (
                 self.camera.viewport_height / 2
         )
-
-        # Don't let camera travel past 0
-        # if screen_center_x < 0:
-        #     screen_center_x = 0
-        # if screen_center_y < 0:
-        #     screen_center_y = 0
         self.camera_center_x, self.camera_center_y = screen_center_x, screen_center_y
         self.camera.move_to((self.camera_center_x, self.camera_center_y))
 

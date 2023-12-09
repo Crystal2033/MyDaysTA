@@ -3,39 +3,19 @@ Platformer Game
 
 python -m arcade.examples.platform_tutorial.11_animate_character
 """
+import math
 
 import arcade
 
-# Constants
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
-SCREEN_TITLE = "Platformer"
 
 # Constants used to scale our sprites from their original size
-TILE_SCALING = 0.5
-CHARACTER_SCALING = TILE_SCALING / 3
-COIN_SCALING = TILE_SCALING
-SPRITE_PIXEL_SIZE = 128
-GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
 
-# Movement speed of player, in pixels per frame
-PLAYER_MOVEMENT_SPEED = 7
-GRAVITY = 1.5
-PLAYER_JUMP_SPEED = 30
-
-PLAYER_START_X = SPRITE_PIXEL_SIZE * TILE_SCALING * 2
-PLAYER_START_Y = SPRITE_PIXEL_SIZE * TILE_SCALING * 1
+CHARACTER_SCALING = 5 / 30
 
 # Constants used to track if the player is facing left or right
 RIGHT_FACING = 0
 LEFT_FACING = 1
 
-LAYER_NAME_MOVING_PLATFORMS = "Moving Platforms"
-LAYER_NAME_PLATFORMS = "Platforms"
-LAYER_NAME_COINS = "Coins"
-LAYER_NAME_BACKGROUND = "Background"
-LAYER_NAME_LADDERS = "Ladders"
-LAYER_NAME_PLAYER = "Player"
 
 
 def load_texture_pair(filename):
@@ -107,27 +87,6 @@ class PlayerCharacter(arcade.Sprite):
         elif self.change_x > 0 and self.character_face_direction == LEFT_FACING:
             self.character_face_direction = RIGHT_FACING
 
-        # Climbing animation
-        # if self.is_on_ladder:
-        #     self.climbing = True
-        # if not self.is_on_ladder and self.climbing:
-        #     self.climbing = False
-        # if self.climbing and abs(self.change_y) > 1:
-        #     self.cur_texture += 1
-        #     if self.cur_texture > 7:
-        #         self.cur_texture = 0
-        # if self.climbing:
-        #     self.texture = self.climbing_textures[self.cur_texture // 4]
-        #     return
-
-        # Jumping animation
-        # if self.change_y > 0 and not self.is_on_ladder:
-        #     self.texture = self.jump_texture_pair[self.character_face_direction]
-        #     return
-        # elif self.change_y < 0 and not self.is_on_ladder:
-        #     self.texture = self.fall_texture_pair[self.character_face_direction]
-        #     return
-
         # Idle animation
         if self.change_x == 0 and self.change_y == 0:
             self.texture = self.idle_texture_pair[self.character_face_direction]
@@ -140,3 +99,44 @@ class PlayerCharacter(arcade.Sprite):
         self.texture = self.walk_textures[self.cur_texture][
             self.character_face_direction
         ]
+
+    def update(self):
+        start_x = self.center_x
+        start_y = self.center_y
+
+        # Where are we going
+        dest_x = self.position_list[self.cur_position][0]
+        dest_y = self.position_list[self.cur_position][1]
+
+        # X and Y diff between the two
+        x_diff = dest_x - start_x
+        y_diff = dest_y - start_y
+
+        # Calculate angle to get there
+        angle = math.atan2(y_diff, x_diff)
+
+        # How far are we?
+        distance = math.sqrt((self.center_x - dest_x) ** 2 + (self.center_y - dest_y) ** 2)
+
+        # How fast should we go? If we are close to our destination,
+        # lower our speed so we don't overshoot.
+        speed = min(self.speed, distance)
+
+        # Calculate vector to travel
+        change_x = math.cos(angle) * speed
+        change_y = math.sin(angle) * speed
+
+        # Update our location
+        self.center_x += change_x
+        self.center_y += change_y
+
+        # How far are we?
+        distance = math.sqrt((self.center_x - dest_x) ** 2 + (self.center_y - dest_y) ** 2)
+
+        # If we are there, head to the next point.
+        if distance <= self.speed:
+            self.cur_position += 1
+
+            # Reached the end of the list, start over.
+            if self.cur_position >= len(self.position_list):
+                self.cur_position = 0
