@@ -7,7 +7,6 @@ import math
 
 import arcade
 
-
 # Constants used to scale our sprites from their original size
 
 CHARACTER_SCALING = 5 / 30
@@ -15,7 +14,6 @@ CHARACTER_SCALING = 5 / 30
 # Constants used to track if the player is facing left or right
 RIGHT_FACING = 0
 LEFT_FACING = 1
-
 
 
 def load_texture_pair(filename):
@@ -31,7 +29,7 @@ def load_texture_pair(filename):
 class PlayerCharacter(arcade.Sprite):
     """Player Sprite"""
 
-    def __init__(self):
+    def __init__(self, speed, path):
 
         # Set up parent class
         super().__init__()
@@ -42,6 +40,8 @@ class PlayerCharacter(arcade.Sprite):
         # Used for flipping between image sequences
         self.cur_texture = 0
         self.scale = CHARACTER_SCALING
+
+        self.speed = speed
 
         # Track our state
         self.jumping = False
@@ -100,13 +100,16 @@ class PlayerCharacter(arcade.Sprite):
             self.character_face_direction
         ]
 
-    def update(self):
+    def move_to_path(self, next_point):
         start_x = self.center_x
         start_y = self.center_y
 
+        if not next_point:
+            return
+
         # Where are we going
-        dest_x = self.position_list[self.cur_position][0]
-        dest_y = self.position_list[self.cur_position][1]
+        dest_x = next_point[0]
+        dest_y = next_point[1]
 
         # X and Y diff between the two
         x_diff = dest_x - start_x
@@ -129,14 +132,3 @@ class PlayerCharacter(arcade.Sprite):
         # Update our location
         self.center_x += change_x
         self.center_y += change_y
-
-        # How far are we?
-        distance = math.sqrt((self.center_x - dest_x) ** 2 + (self.center_y - dest_y) ** 2)
-
-        # If we are there, head to the next point.
-        if distance <= self.speed:
-            self.cur_position += 1
-
-            # Reached the end of the list, start over.
-            if self.cur_position >= len(self.position_list):
-                self.cur_position = 0

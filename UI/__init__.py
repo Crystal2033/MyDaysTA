@@ -8,6 +8,7 @@ import pyglet.math
 
 from Mechanic import ModelMechanic
 from Mechanic.ObserverPattern.Subscriber import Subscriber
+from Mechanic.states.STATE_NAMES import STATES
 from UI.Player import PlayerCharacter
 
 root = tk.Tk()
@@ -69,13 +70,24 @@ class MyGame(arcade.Window):
         # Separate variable that holds the player sprite
         self.player_sprite = None
 
+        self.destinations = {
+            STATES.SLEEP: (472, 246),
+            STATES.EAT: (464, 318),
+            STATES.REST: (250, 172),
+            STATES.UNIVERSITY: (986, 689),
+            STATES.ROAD: (184, 572),
+            STATES.PC: (482, 156),
+            STATES.HOBBY: (275, 298),
+            STATES.WALK: (776, 362),
+        }
+
         # --- Related to paths
         # List of points that makes up a path between two points
         self.path = None
         # List of points we checked to see if there is a barrier there
         self.barrier_list = None
 
-        self.destination_point = (988, 595)
+        self.destination_point = self.destinations[STATES.SLEEP]
 
         # Our Scene Object
         self.scene = None
@@ -88,7 +100,7 @@ class MyGame(arcade.Window):
         self.mouse_pos_x = PLAYER_START_X
         self.mouse_pos_y = PLAYER_START_X
 
-        self.current_camera_scale = 1#0.25
+        self.current_camera_scale = 1  # 0.25
 
         # Our physics engine
         self.physics_engine = None
@@ -139,7 +151,7 @@ class MyGame(arcade.Window):
 
         # Set up the player, specifically placing it at these coordinates.
 
-        self.player_sprite = PlayerCharacter()
+        self.player_sprite = PlayerCharacter(PLAYER_MOVEMENT_SPEED, self.path)
         self.player_sprite.center_x = PLAYER_START_X
         self.player_sprite.center_y = PLAYER_START_Y
         self.scene.add_sprite("Player", self.player_sprite)
@@ -185,16 +197,32 @@ class MyGame(arcade.Window):
         """Called whenever a key is pressed."""
 
         if key == arcade.key.UP or key == arcade.key.W:
-            self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_y = self.player_sprite.speed
             # arcade.play_sound(self.coin_sound)
         elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_y = -self.player_sprite.speed
         elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_x = -self.player_sprite.speed
         elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+            self.player_sprite.change_x = self.player_sprite.speed
         elif key == arcade.key.C:
             self.center_camera_to_player()
+        elif key == arcade.key.KEY_1:
+            self.destination_point = self.destinations[STATES.SLEEP]
+        elif key == arcade.key.KEY_2:
+            self.destination_point = self.destinations[STATES.EAT]
+        elif key == arcade.key.KEY_3:
+            self.destination_point = self.destinations[STATES.REST]
+        elif key == arcade.key.KEY_4:
+            self.destination_point = self.destinations[STATES.UNIVERSITY]
+        elif key == arcade.key.KEY_5:
+            self.destination_point = self.destinations[STATES.ROAD]
+        elif key == arcade.key.KEY_6:
+            self.destination_point = self.destinations[STATES.PC]
+        elif key == arcade.key.KEY_7:
+            self.destination_point = self.destinations[STATES.HOBBY]
+        elif key == arcade.key.KEY_8:
+            self.destination_point = self.destinations[STATES.WALK]
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
@@ -210,21 +238,22 @@ class MyGame(arcade.Window):
 
     def move_camera_if_need(self):
         is_need_to_change_pos = False
+        camera_delta = 5
 
         if self.mouse_pos_y < float(SCREEN_HEIGHT) * 0.1:
-            self.camera_center_y -= 10
+            self.camera_center_y -= camera_delta
             is_need_to_change_pos = True
 
         if self.mouse_pos_y > float(SCREEN_HEIGHT) * 0.9:
-            self.camera_center_y += 10
+            self.camera_center_y += camera_delta
             is_need_to_change_pos = True
 
         if self.mouse_pos_x < float(SCREEN_WIDTH) * 0.1:
-            self.camera_center_x -= 10
+            self.camera_center_x -= camera_delta
             is_need_to_change_pos = True
 
         if self.mouse_pos_x > float(SCREEN_WIDTH) * 0.9:
-            self.camera_center_x += 10
+            self.camera_center_x += camera_delta
             is_need_to_change_pos = True
 
         if ((float(SCREEN_HEIGHT) * 0.1 < self.mouse_pos_y < float(SCREEN_HEIGHT) * 0.9)
@@ -232,7 +261,7 @@ class MyGame(arcade.Window):
             is_need_to_change_pos = False
 
         if is_need_to_change_pos:
-            self.camera.move_to(pyglet.math.Vec2(self.camera_center_x, self.camera_center_y), 1)
+            self.camera.move_to(pyglet.math.Vec2(self.camera_center_x, self.camera_center_y), 0.4)
 
     def on_update(self, delta_time):
         """Movement and game logic"""
@@ -250,11 +279,9 @@ class MyGame(arcade.Window):
                                                 self.destination_point,
                                                 self.barrier_list,
                                                 diagonal_movement=False)
-        print(self.path, "->", self.destination_point)
 
-    def move_player_by_path(self):
-        if self.path:
-            pass
+        # if len(self.path) > 1:
+        #     self.player_sprite.move_to_path(self.path[1])
 
     def on_draw(self):
         """Render the screen."""
@@ -262,7 +289,6 @@ class MyGame(arcade.Window):
 
         # Activate our Camera
         self.camera.use()
-
 
         self.scene.draw()
         # Activate the GUI camera before drawing GUI elements
