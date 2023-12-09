@@ -1,14 +1,14 @@
 """
 Platformer Game
 """
-import timeit
 import tkinter as tk
 
 import arcade
-from UI.Player import PlayerCharacter
+import pyglet.math
 
 from Mechanic import ModelMechanic
 from Mechanic.ObserverPattern.Subscriber import Subscriber
+from UI.Player import PlayerCharacter
 
 root = tk.Tk()
 
@@ -19,7 +19,7 @@ screen_height = root.winfo_screenheight()
 SCREEN_WIDTH = int(screen_width / 1.5)
 SCREEN_HEIGHT = int(screen_height / 1.5)
 SCREEN_TITLE = "Paul`s days"
-PLAYER_MOVEMENT_SPEED = 5
+PLAYER_MOVEMENT_SPEED = 2
 
 # Constants used to scale our sprites from their original size
 TILE_SCALING = 0.5
@@ -27,13 +27,10 @@ CHARACTER_SCALING = TILE_SCALING * 2
 COIN_SCALING = TILE_SCALING
 SPRITE_PIXEL_SIZE = 128
 GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
+VIEWPORT_MARGIN = 100
 
-# Movement speed of player, in pixels per frame
-GRAVITY = 1.5
-PLAYER_JUMP_SPEED = 30
-
-PLAYER_START_X = SPRITE_PIXEL_SIZE * TILE_SCALING * 2
-PLAYER_START_Y = SPRITE_PIXEL_SIZE * TILE_SCALING * 1
+PLAYER_START_X = 64
+PLAYER_START_Y = 128
 
 
 class UIViewInfo:
@@ -78,6 +75,13 @@ class MyGame(arcade.Window):
 
         # A Camera that can be used for scrolling the screen
         self.camera = None
+        self.camera_center_x = 0
+        self.camera_center_y = 0
+
+        self.mouse_pos_x = PLAYER_START_X
+        self.mouse_pos_y = PLAYER_START_X
+
+        self.current_camera_scale = 0.4
 
         # Our physics engine
         self.physics_engine = None
@@ -85,25 +89,19 @@ class MyGame(arcade.Window):
         # A Camera that can be used to draw GUI elements
         self.gui_camera = None
 
+        # Our TileMap Object
+        self.tile_map = None
+
         self.ui_view_info = UIViewInfo()
         # Keep track of the time
         self.view_changer = ViewChanger(self.ui_view_info)
 
-        # --- Variables for our statistics
-        # Time for on_update
-        self.processing_time = 0
-
-        # Time for on_draw
-        self.draw_time = 0
-
-        # Variables used to calculate frames per second
-        self.frame_count = 0
-
-        self.fps_start_timer = None
-
-        self.fps = None
-
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
+
+    def on_mouse_motion(self, x: int, y: int, dx: int, dy: int):
+        super().on_mouse_motion(x, y, dx, dy)
+        self.mouse_pos_x = x
+        self.mouse_pos_y = y
 
     def setup(self):
         """Set up the game here. Call this function to restart the game."""
@@ -111,11 +109,24 @@ class MyGame(arcade.Window):
         # Set up the Camera
         self.camera = arcade.Camera(self.width, self.height)
 
+
         # Set up the GUI Camera
         self.gui_camera = arcade.Camera(self.width, self.height)
 
+        map_name = 'UI/map.tmx'
+        layer_options = {
+            "Walls": {
+                "use_spatial_hash": True,
+            },
+            "Road": {
+                "use_spatial_hash": True
+            }
+        }
+
+        self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
+
         # Initialize Scene
-        self.scene = arcade.Scene()
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # Set up the player, specifically placing it at these coordinates.
 
@@ -124,39 +135,12 @@ class MyGame(arcade.Window):
         self.player_sprite.center_y = PLAYER_START_Y
         self.scene.add_sprite("Player", self.player_sprite)
 
-        # Create the Sprite lists
-        #self.scene.add_sprite_list("Player")
-        #self.scene.add_sprite_list("Walls", use_spatial_hash=True)
-
-        # image_source = ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png"
-        # self.player_sprite = arcade.Sprite(image_source, CHARACTER_SCALING)
-        # self.player_sprite.center_x = 64
-        # self.player_sprite.center_y = 128
-        # self.scene.add_sprite("Player", self.player_sprite)
-
-        for x in range(0, 1250, 64):
-            wall = arcade.Sprite(":resources:images/tiles/grassMid.png", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 32
-            self.scene.add_sprite("Walls", wall)
-
-        # Put some crates on the ground
-        # This shows using a coordinate list to place sprites
-        coordinate_list = [[512, 96], [256, 96], [768, 96]]
-
-        for coordinate in coordinate_list:
-            # Add a crate on the ground
-            wall = arcade.Sprite(
-                ":resources:images/tiles/boxCrate_double.png", TILE_SCALING
-            )
-            wall.position = coordinate
-            self.scene.add_sprite("Walls", wall)
 
         # Create the 'physics engine'
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite, self.scene.get_sprite_list("Walls")
         )
-        # self.view_changer.start_changes()
+        self.view_changer.start_changes()
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
@@ -170,9 +154,8 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
-        # elif key == arcade.key.C:
-        #     # Position the camera
-        #     self.center_camera_to_player()
+        elif key == arcade.key.C:
+            self.center_camera_to_player()
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
@@ -186,10 +169,34 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = 0
 
+    def move_camera_if_need(self):
+        is_need_to_change_pos = False
+
+        if self.mouse_pos_y < float(SCREEN_HEIGHT) * 0.1:
+            self.camera_center_y -= 3
+            is_need_to_change_pos = True
+
+        if self.mouse_pos_y > float(SCREEN_HEIGHT) * 0.9:
+            self.camera_center_y += 3
+            is_need_to_change_pos = True
+
+        if self.mouse_pos_x < float(SCREEN_WIDTH) * 0.1:
+            self.camera_center_x -= 3
+            is_need_to_change_pos = True
+
+        if self.mouse_pos_x > float(SCREEN_WIDTH) * 0.9:
+            self.camera_center_x += 3
+            is_need_to_change_pos = True
+
+        if ((float(SCREEN_HEIGHT) * 0.1 < self.mouse_pos_y < float(SCREEN_HEIGHT) * 0.9)
+                and (float(SCREEN_WIDTH) * 0.1 < self.mouse_pos_x < float(SCREEN_WIDTH) * 0.9)):
+            is_need_to_change_pos = False
+
+        if is_need_to_change_pos:
+            self.camera.move_to(pyglet.math.Vec2(self.camera_center_x, self.camera_center_y), 0.3)
+
     def on_update(self, delta_time):
         """Movement and game logic"""
-        # Start timing how long this takes
-        start_time = timeit.default_timer()
         # Move the player with the physics engine
         self.physics_engine.update()
 
@@ -198,40 +205,19 @@ class MyGame(arcade.Window):
             delta_time, ["Player"]
         )
 
-        self.center_camera_to_player()
-
-        # Stop the draw timer, and calculate total on_draw time.
-        self.processing_time = timeit.default_timer() - start_time
+        self.move_camera_if_need()
 
     def on_draw(self):
         """Render the screen."""
-
-        # Start timing how long this takes
-        start_time = timeit.default_timer()
-
-        # --- Calculate FPS
-        fps_calculation_freq = 60
-
-        # Once every 60 frames, calculate our FPS
-        if self.frame_count % fps_calculation_freq == 0:
-            # Do we have a start time?
-            if self.fps_start_timer is not None:
-                # Calculate FPS
-                total_time = timeit.default_timer() - self.fps_start_timer
-                self.fps = fps_calculation_freq / total_time
-            # Reset the timer
-            self.fps_start_timer = timeit.default_timer()
-        # Add one to our frame count
-        self.frame_count += 1
         self.clear()
-        self.scene.draw()
 
         # Activate our Camera
         self.camera.use()
+        self.camera.scale = self.current_camera_scale
 
+        self.scene.draw()
         # Activate the GUI camera before drawing GUI elements
         self.gui_camera.use()
-
         # Draw our score on the screen, scrolling it with the viewport
         score_text = f"Score: {self.ui_view_info.timer_text_view}"
         arcade.draw_text(
@@ -242,23 +228,17 @@ class MyGame(arcade.Window):
             18,
         )
 
-        # Display timings
-        output = f"Processing time: {self.processing_time:.3f}"
+        arcade.draw_text(
+            f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
+            500,
+            10,
+            arcade.csscolor.BLACK,
+            18,
+        )
 
-        arcade.draw_text(output, 20, SCREEN_HEIGHT - 25, arcade.color.BLACK, 18)
-
-        output = f"Drawing time: {self.draw_time:.3f}"
-
-        arcade.draw_text(output, 20, SCREEN_HEIGHT - 50, arcade.color.BLACK, 18)
-
-        if self.fps is not None:
-            output = f"FPS: {self.fps:.0f}"
-        arcade.draw_text(output, 20, SCREEN_HEIGHT - 75, arcade.color.BLACK, 18)
-
-        # Stop the draw timer, and calculate total on_draw time.
-        self.draw_time = timeit.default_timer() - start_time
-
-        # Code to draw the screen goes here
+    def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
+        super().on_mouse_press(x, y, button, modifiers)
+        print(f"Mouse ({x},{y})")
 
     def center_camera_to_player(self):
         screen_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
@@ -267,13 +247,19 @@ class MyGame(arcade.Window):
         )
 
         # Don't let camera travel past 0
-        if screen_center_x < 0:
-            screen_center_x = 0
-        if screen_center_y < 0:
-            screen_center_y = 0
-        player_centered = screen_center_x, screen_center_y
+        # if screen_center_x < 0:
+        #     screen_center_x = 0
+        # if screen_center_y < 0:
+        #     screen_center_y = 0
+        self.camera_center_x, self.camera_center_y = screen_center_x, screen_center_y
+        self.camera.move_to((self.camera_center_x, self.camera_center_y))
 
-        self.camera.move_to(player_centered)
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+        super().on_mouse_scroll(x, y, scroll_x, scroll_y)
+        if scroll_y > 0:
+            self.current_camera_scale = 0.1 if (self.current_camera_scale <= 0.15) else self.current_camera_scale - 0.1
+        elif scroll_y < 0:
+            self.current_camera_scale += 0.1
 
 
 def main():

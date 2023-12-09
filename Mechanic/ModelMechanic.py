@@ -18,18 +18,18 @@ from Mechanic.states.WednesdayState import WednesdayState
 # mood changes notify -> mech notify -> UI
 class ModelMechanic(Subscriber, Publisher):
     def updateByNotify(self):
-        print("-----------------------------------------------")
-        self._states[self._weekTimerVar.get_current_day()].get_state(
-            self._weekTimerVar.get_current_time(),
-            self._moodChangerVar.get_mood()
-        )
-        print("-----------------------------------------------")
+        # print("-----------------------------------------------")
+        # self._states[self._weekTimerVar.get_current_day()].get_state(
+        #     self._weekTimerVar.get_current_time(),
+        #     self._moodChangerVar.get_mood()
+        # )
+        # print("-----------------------------------------------")
 
         self.notify()  # for future UI
 
     def __init__(self):
         super().__init__()
-        self._weekTimerVar = WeekTimer(TimerSpeedStates.FAST)
+        self._weekTimerVar = WeekTimer(TimerSpeedStates.NORMAL)
         self._moodChangerVar = MoodChanger()
         self._states = {
             DaysPerWeek.SUNDAY: SundayState(),
