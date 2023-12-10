@@ -46,11 +46,15 @@ class ViewChanger(Subscriber):
         self._ui_view_info = ui_view_info
         self.mech.attach(self)
 
+    def set_new_mood(self, new_mood: Mood):
+        self.mech.set_mood_fast(new_mood)
+
     def start_changes(self):
         self.mech.start()
 
     def updateByNotify(self):
         self._ui_view_info.timer_text_view = self.mech.get_current_time_and_date()
+        self._ui_view_info.mood_text_view = self.mech.get_mood()
 
     def stop(self):
         self.mech.stop()
@@ -112,9 +116,10 @@ class MyGame(arcade.Window):
         # Our TileMap Object
         self.tile_map = None
 
+        # MECHANIC
         self.mech_ui_shared_data = MechanicWithUiSharedData()
-        # Keep track of the time
         self.view_changer = ViewChanger(self.mech_ui_shared_data)
+        # MECHANIC
 
         self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
 
@@ -242,6 +247,12 @@ class MyGame(arcade.Window):
             self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_0:
             self.destination_point = None
+        elif key == arcade.key.B:
+            self.view_changer.set_new_mood(Mood.BAD)
+        elif key == arcade.key.N:
+            self.view_changer.set_new_mood(Mood.NORMAL)
+        elif key == arcade.key.G:
+            self.view_changer.set_new_mood(Mood.GOOD)
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""

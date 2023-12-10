@@ -1,7 +1,7 @@
 import threading
 import time
 
-from Mechanic.Mood import MoodChanger
+from Mechanic.Mood import MoodChanger, Mood
 from Mechanic.ObserverPattern.Publisher import Publisher
 from Mechanic.ObserverPattern.Subscriber import Subscriber
 from Mechanic.WeekTimer import WeekTimer, TimerSpeedStates, DaysPerWeek
@@ -61,6 +61,12 @@ class ModelMechanic(Subscriber, Publisher):
     def make_mood_better(self, amount_of_better_units: int):
         thread = threading.Thread(target=self.mood_better_thread, args=(amount_of_better_units,))
         thread.start()
+
+    def set_mood_fast(self, new_mood: Mood):
+        self._moodChangerVar.set_mood_simultaneously(new_mood)
+
+    def get_mood(self):
+        return self._moodChangerVar.get_mood()
 
     def get_current_time_and_date(self):
         return self._weekTimerVar.get_current_time() + " " + self._weekTimerVar.get_current_day().name

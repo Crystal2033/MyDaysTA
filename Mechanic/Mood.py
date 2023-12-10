@@ -26,6 +26,15 @@ class MoodChanger(Publisher):
             self._MOOD_MAX_VALUE if self._moodBattery + 1 > self._MOOD_MAX_VALUE else self._moodBattery + delta)
         self.notify()
 
+    def set_mood_simultaneously(self, new_mood):
+        mood_map = {
+            Mood.BAD: 0,
+            Mood.NORMAL: 60,
+            Mood.GOOD: 90
+        }
+        self._moodBattery = mood_map[new_mood]
+        self.notify()
+
     def get_mood(self):
         if self._moodBattery > 75:
             return Mood.GOOD
