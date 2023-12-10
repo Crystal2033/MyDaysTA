@@ -9,6 +9,7 @@ import pyglet.math
 from Mechanic import ModelMechanic
 from Mechanic.Mood import Mood
 from Mechanic.ObserverPattern.Subscriber import Subscriber
+from Mechanic.WeekTimer import TimerSpeedStates
 from Mechanic.states.STATE_NAMES import STATES
 from UI.Player import PlayerCharacter
 
@@ -21,7 +22,6 @@ screen_height = root.winfo_screenheight()
 SCREEN_WIDTH = int(screen_width / 1.3)
 SCREEN_HEIGHT = int(screen_height / 1.3)
 SCREEN_TITLE = "Paul`s days"
-PLAYER_MOVEMENT_SPEED = 4
 
 # Constants used to scale our sprites from their original size
 TILE_SCALING = 0.5
@@ -39,6 +39,7 @@ class MechanicWithUiSharedData:
         self.mood_text_view = Mood.NORMAL
         self.current_state_text_view = STATES.SLEEP
         self.is_able_to_change_mood = False
+        self.time_speed = TimerSpeedStates.NORMAL
 
 
 class ViewChanger(Subscriber):
@@ -46,6 +47,9 @@ class ViewChanger(Subscriber):
         self.mech = ModelMechanic()
         self._ui_view_info = ui_view_info
         self.mech.attach(self)
+
+    def set_new_time_speed(self, new_time_speed: TimerSpeedStates):
+        self.mech.set_new_time_speed(new_time_speed)
 
     def set_new_mood(self, new_mood: Mood):
         self.mech.set_mood_fast(new_mood)
@@ -57,6 +61,7 @@ class ViewChanger(Subscriber):
         self._ui_view_info.timer_text_view = self.mech.get_current_time_and_date()
         self._ui_view_info.mood_text_view = self.mech.get_mood()
         self._ui_view_info.current_state_text_view, self._ui_view_info.is_able_to_change_mood = self.mech.get_state()
+        self._ui_view_info.time_speed = self.mech.get_time_speed()
 
     def stop(self):
         self.mech.stop()
@@ -89,7 +94,7 @@ class MyGame(arcade.Window):
             STATES.EAT: (464, 318),
             STATES.REST: (250, 172),
             STATES.UNIVERSITY: (986, 689),
-            STATES.ROAD: (686, 575),
+            STATES.ROAD: (378, 575),
             STATES.PC: (482, 156),
             STATES.HOBBY: (275, 298),
             STATES.WALK: (776, 362),
@@ -129,7 +134,7 @@ class MyGame(arcade.Window):
         self.view_changer = ViewChanger(self.mech_ui_shared_data)
         # MECHANIC
 
-        #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+        # self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         self.destination_point = None
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
@@ -173,9 +178,10 @@ class MyGame(arcade.Window):
 
         # Set up the player, specifically placing it at these coordinates.
 
-        self.player_sprite = PlayerCharacter(PLAYER_MOVEMENT_SPEED)
+        self.player_sprite = PlayerCharacter()
         self.player_sprite.center_x = PLAYER_START_X
         self.player_sprite.center_y = PLAYER_START_Y
+        self.player_sprite.set_new_player_speed_by_time_velocity(self.mech_ui_shared_data.time_speed)
         self.scene.add_sprite("Player", self.player_sprite)
 
         # Create the 'physics engine'
@@ -230,29 +236,13 @@ class MyGame(arcade.Window):
         elif key == arcade.key.C:
             self.is_camera_follow_player = True
         elif key == arcade.key.KEY_1:
-            self.mech_ui_shared_data.current_state_text_view = STATES.SLEEP
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            self.view_changer.set_new_time_speed(TimerSpeedStates.SLOW)
         elif key == arcade.key.KEY_2:
-            self.mech_ui_shared_data.current_state_text_view = STATES.EAT
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            self.view_changer.set_new_time_speed(TimerSpeedStates.NORMAL)
         elif key == arcade.key.KEY_3:
-            self.mech_ui_shared_data.current_state_text_view = STATES.REST
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            self.view_changer.set_new_time_speed(TimerSpeedStates.SEMIFAST)
         elif key == arcade.key.KEY_4:
-            self.mech_ui_shared_data.current_state_text_view = STATES.UNIVERSITY
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
-        elif key == arcade.key.KEY_5:
-            self.mech_ui_shared_data.current_state_text_view = STATES.ROAD
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
-        elif key == arcade.key.KEY_6:
-            self.mech_ui_shared_data.current_state_text_view = STATES.PC
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
-        elif key == arcade.key.KEY_7:
-            self.mech_ui_shared_data.current_state_text_view = STATES.HOBBY
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
-        elif key == arcade.key.KEY_8:
-            self.mech_ui_shared_data.current_state_text_view = STATES.WALK
-            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            self.view_changer.set_new_time_speed(TimerSpeedStates.FAST)
         elif key == arcade.key.KEY_0:
             self.destination_point = None
         elif key == arcade.key.H:
@@ -337,6 +327,7 @@ class MyGame(arcade.Window):
         )
 
         self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+        self.player_sprite.set_new_player_speed_by_time_velocity(self.mech_ui_shared_data.time_speed)
 
     def on_draw(self):
         """Render the screen."""

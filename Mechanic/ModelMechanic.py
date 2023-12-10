@@ -20,20 +20,14 @@ from Mechanic.states.WednesdayState import WednesdayState
 # mood changes notify -> mech notify -> UI
 class ModelMechanic(Subscriber, Publisher):
     def updateByNotify(self):
-        # print("-----------------------------------------------")
-        # self._states[self._weekTimerVar.get_current_day()].get_state(
-        #     self._weekTimerVar.get_current_time(),
-        #     self._moodChangerVar.get_mood()
-        # )
-        # print("-----------------------------------------------")
-        # states has list of essential times. If current time is essential, than getState. Else nothing. Not working...
-        #
         self.current_state_automat = self._states[self._weekTimerVar.get_current_day()]
+        self._time_speed = self._weekTimerVar.get_timer_speed()
         self.notify()  # for UI
 
     def __init__(self):
         super().__init__()
-        self._weekTimerVar = WeekTimer(TimerSpeedStates.SEMIFAST)
+        self._time_speed = TimerSpeedStates.NORMAL
+        self._weekTimerVar = WeekTimer(self._time_speed)
         self._moodChangerVar = MoodChanger()
         self._states = {
             DaysPerWeek.SUNDAY: SundayState(),
@@ -44,7 +38,7 @@ class ModelMechanic(Subscriber, Publisher):
             DaysPerWeek.FRIDAY: FridayState(),
             DaysPerWeek.SATURDAY: SaturdayState(),
         }
-        self.current_state_automat: DayStatesChanger = self._states[DaysPerWeek.SUNDAY]
+        self.current_state_automat: DayStatesChanger = self._states[self._weekTimerVar.get_current_day()]
 
         self._weekTimerVar.attach(self)
         self._moodChangerVar.attach(self)
@@ -52,6 +46,12 @@ class ModelMechanic(Subscriber, Publisher):
     def get_state(self):
         return self.current_state_automat.get_state(datetime.strptime(self._weekTimerVar.get_current_time(), "%H:%M"),
                                                     self._moodChangerVar.get_mood())
+
+    def set_new_time_speed(self, time_speed: TimerSpeedStates):
+        self._weekTimerVar.change_timer_speed_state(time_speed)
+
+    def get_time_speed(self):
+        return self._time_speed
 
     def make_mood_worse(self, amount_of_worse_units: int):
         thread = threading.Thread(target=self.mood_worse_thread, args=(amount_of_worse_units,))

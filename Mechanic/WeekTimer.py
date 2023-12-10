@@ -54,6 +54,9 @@ class WeekTimer(Publisher):
     def change_timer_speed_state(self, new_speed_state: TimerSpeedStates):
         self._timerSpeedState = new_speed_state
 
+    def get_timer_speed(self):
+        return self._timerSpeedState
+
     def get_current_day(self):
         return self._currentDayOfWeek
 

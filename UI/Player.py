@@ -7,6 +7,8 @@ import math
 
 import arcade
 
+from Mechanic.WeekTimer import TimerSpeedStates
+
 # Constants used to scale our sprites from their original size
 
 CHARACTER_SCALING = 5 / 30
@@ -15,6 +17,11 @@ CHARACTER_SCALING = 5 / 30
 RIGHT_FACING = 0
 LEFT_FACING = 1
 
+
+SLOW_SPEED = 2
+NORMAL_SPEED = 4
+SEMIFAST_SPEED = 8
+FAST_SPEED = 16
 
 def load_texture_pair(filename):
     """
@@ -29,7 +36,7 @@ def load_texture_pair(filename):
 class PlayerCharacter(arcade.Sprite):
     """Player Sprite"""
 
-    def __init__(self, speed):
+    def __init__(self):
 
         # Set up parent class
         super().__init__()
@@ -41,7 +48,7 @@ class PlayerCharacter(arcade.Sprite):
         self.cur_texture = 0
         self.scale = CHARACTER_SCALING
 
-        self.speed = speed
+        self.speed = NORMAL_SPEED
 
         # Track our state
         self.jumping = False
@@ -51,7 +58,7 @@ class PlayerCharacter(arcade.Sprite):
         # --- Load Textures ---
 
         # Images from Kenney.nl's Asset Pack 3
-        main_path = ":resources:images/animated_characters/male_person/malePerson"
+        main_path = ":resources:images/animated_characters/male_adventurer/maleAdventurer"
 
         # Load textures for idle standing
         self.idle_texture_pair = load_texture_pair(f"{main_path}_idle.png")
@@ -98,6 +105,17 @@ class PlayerCharacter(arcade.Sprite):
         self.texture = self.walk_textures[self.cur_texture][
             self.character_face_direction
         ]
+
+    def set_new_player_speed_by_time_velocity(self, time_speed: TimerSpeedStates):
+        if time_speed == TimerSpeedStates.SLOW:
+            self.speed = SLOW_SPEED
+        elif time_speed == TimerSpeedStates.NORMAL:
+            self.speed = NORMAL_SPEED
+        elif time_speed == TimerSpeedStates.SEMIFAST:
+            self.speed = SEMIFAST_SPEED
+        elif time_speed == TimerSpeedStates.FAST:
+            self.speed = FAST_SPEED
+
 
     def stop_player(self):
         self.change_x = 0
