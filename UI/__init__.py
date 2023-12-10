@@ -20,7 +20,7 @@ screen_height = root.winfo_screenheight()
 SCREEN_WIDTH = int(screen_width / 1.3)
 SCREEN_HEIGHT = int(screen_height / 1.3)
 SCREEN_TITLE = "Paul`s days"
-PLAYER_MOVEMENT_SPEED = 10
+PLAYER_MOVEMENT_SPEED = 4
 
 # Constants used to scale our sprites from their original size
 TILE_SCALING = 0.5
@@ -32,15 +32,15 @@ PLAYER_START_X = 360
 PLAYER_START_Y = 150
 
 
-class UIViewInfo:
+class MechanicWithUiSharedData:
     def __init__(self):
         self.timer_text_view = ""
         self.mood_text_view = ""
-        self.current_state_text_view = ""
+        self.current_state_text_view = STATES.SLEEP
 
 
 class ViewChanger(Subscriber):
-    def __init__(self, ui_view_info: UIViewInfo):
+    def __init__(self, ui_view_info: MechanicWithUiSharedData):
         self.mech = ModelMechanic()
         self._ui_view_info = ui_view_info
         self.mech.attach(self)
@@ -75,7 +75,7 @@ class MyGame(arcade.Window):
             STATES.EAT: (464, 318),
             STATES.REST: (250, 172),
             STATES.UNIVERSITY: (986, 689),
-            STATES.ROAD: (184, 572),
+            STATES.ROAD: (686, 575),
             STATES.PC: (482, 156),
             STATES.HOBBY: (275, 298),
             STATES.WALK: (776, 362),
@@ -87,7 +87,7 @@ class MyGame(arcade.Window):
         # List of points we checked to see if there is a barrier there
         self.barrier_list = None
 
-        self.destination_point = self.destinations[STATES.SLEEP]
+
 
         # Our Scene Object
         self.scene = None
@@ -96,6 +96,7 @@ class MyGame(arcade.Window):
         self.camera = None
         self.camera_center_x = 0
         self.camera_center_y = 0
+        self.is_camera_follow_player = False
 
         self.mouse_pos_x = PLAYER_START_X
         self.mouse_pos_y = PLAYER_START_X
@@ -111,9 +112,11 @@ class MyGame(arcade.Window):
         # Our TileMap Object
         self.tile_map = None
 
-        self.ui_view_info = UIViewInfo()
+        self.mech_ui_shared_data = MechanicWithUiSharedData()
         # Keep track of the time
-        self.view_changer = ViewChanger(self.ui_view_info)
+        self.view_changer = ViewChanger(self.mech_ui_shared_data)
+
+        self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
 
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
@@ -141,7 +144,13 @@ class MyGame(arcade.Window):
             },
             "GroundUnderRails": {
                 "use_spatial_hash": True
-            }
+            },
+            "Decorations": {
+                "use_spatial_hash": True
+            },
+            "UpperDecor": {
+                "use_spatial_hash": True
+            },
         }
 
         self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
@@ -170,10 +179,10 @@ class MyGame(arcade.Window):
 
         # Calculate the playing field size. We can't generate paths outside of
         # this.
-        playing_field_left_boundary = -SCREEN_WIDTH
-        playing_field_right_boundary = SCREEN_WIDTH
-        playing_field_top_boundary = SCREEN_HEIGHT
-        playing_field_bottom_boundary = -SCREEN_HEIGHT
+        playing_field_left_boundary = -SCREEN_WIDTH * 2
+        playing_field_right_boundary = SCREEN_WIDTH * 2
+        playing_field_top_boundary = SCREEN_HEIGHT * 2
+        playing_field_bottom_boundary = -SCREEN_HEIGHT * 2
 
         # This calculates a list of barriers. By calculating it here in the
         # init, we are assuming this list does not change. In this example,
@@ -192,13 +201,13 @@ class MyGame(arcade.Window):
                                                     playing_field_right_boundary,
                                                     playing_field_bottom_boundary,
                                                     playing_field_top_boundary)
+        print("test")
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
         if key == arcade.key.UP or key == arcade.key.W:
             self.player_sprite.change_y = self.player_sprite.speed
-            # arcade.play_sound(self.coin_sound)
         elif key == arcade.key.DOWN or key == arcade.key.S:
             self.player_sprite.change_y = -self.player_sprite.speed
         elif key == arcade.key.LEFT or key == arcade.key.A:
@@ -206,23 +215,33 @@ class MyGame(arcade.Window):
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = self.player_sprite.speed
         elif key == arcade.key.C:
-            self.center_camera_to_player()
+            self.is_camera_follow_player = True
         elif key == arcade.key.KEY_1:
-            self.destination_point = self.destinations[STATES.SLEEP]
+            self.mech_ui_shared_data.current_state_text_view = STATES.SLEEP
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_2:
-            self.destination_point = self.destinations[STATES.EAT]
+            self.mech_ui_shared_data.current_state_text_view = STATES.EAT
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_3:
-            self.destination_point = self.destinations[STATES.REST]
+            self.mech_ui_shared_data.current_state_text_view = STATES.REST
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_4:
-            self.destination_point = self.destinations[STATES.UNIVERSITY]
+            self.mech_ui_shared_data.current_state_text_view = STATES.UNIVERSITY
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_5:
-            self.destination_point = self.destinations[STATES.ROAD]
+            self.mech_ui_shared_data.current_state_text_view = STATES.ROAD
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_6:
-            self.destination_point = self.destinations[STATES.PC]
+            self.mech_ui_shared_data.current_state_text_view = STATES.PC
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_7:
-            self.destination_point = self.destinations[STATES.HOBBY]
+            self.mech_ui_shared_data.current_state_text_view = STATES.HOBBY
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_8:
-            self.destination_point = self.destinations[STATES.WALK]
+            self.mech_ui_shared_data.current_state_text_view = STATES.WALK
+            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+        elif key == arcade.key.KEY_0:
+            self.destination_point = None
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
@@ -235,6 +254,8 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = 0
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = 0
+        elif key == arcade.key.C:
+            self.is_camera_follow_player = False
 
     def move_camera_if_need(self):
         is_need_to_change_pos = False
@@ -268,20 +289,29 @@ class MyGame(arcade.Window):
         # Move the player with the physics engine
         self.physics_engine.update()
 
+
+
+        # Set to True if we can move diagonally. Note that diagonal movement
+        # might cause the enemy to clip corners.
+        if self.destination_point:
+            self.path = arcade.astar_calculate_path((self.player_sprite.center_x, self.player_sprite.center_y),
+                                                    self.destination_point,
+                                                    self.barrier_list,
+                                                    diagonal_movement=False)
+        else:
+            self.path = None
+
+        if self.path and len(self.path) > 1:
+            self.player_sprite.move_to_path(self.path[1])
+        else:
+            if self.destination_point:
+                self.player_sprite.stop_player()
+
+
         # Update Animations
         self.scene.update_animation(
             delta_time, ["Player"]
         )
-
-        # Set to True if we can move diagonally. Note that diagonal movement
-        # might cause the enemy to clip corners.
-        self.path = arcade.astar_calculate_path((self.player_sprite.center_x, self.player_sprite.center_y),
-                                                self.destination_point,
-                                                self.barrier_list,
-                                                diagonal_movement=False)
-
-        # if len(self.path) > 1:
-        #     self.player_sprite.move_to_path(self.path[1])
 
     def on_draw(self):
         """Render the screen."""
@@ -289,12 +319,14 @@ class MyGame(arcade.Window):
 
         # Activate our Camera
         self.camera.use()
+        if self.is_camera_follow_player:
+            self.center_camera_to_player()
 
         self.scene.draw()
         # Activate the GUI camera before drawing GUI elements
         self.gui_camera.use()
         # Draw our score on the screen, scrolling it with the viewport
-        score_text = f"Score: {self.ui_view_info.timer_text_view}"
+        score_text = f"Score: {self.mech_ui_shared_data.timer_text_view}"
         arcade.draw_text(
             score_text,
             10,
@@ -312,7 +344,7 @@ class MyGame(arcade.Window):
         )
 
         arcade.draw_text(
-            f"State: {self.ui_view_info.current_state_text_view}",
+            f"State: {self.mech_ui_shared_data.current_state_text_view.name}",
             900,
             10,
             arcade.csscolor.BLACK,
@@ -322,6 +354,7 @@ class MyGame(arcade.Window):
         if self.path:
             self.move_path_by_camera()
             arcade.draw_line_strip(self.path, arcade.color.BLUE, 2)
+
         self.move_camera_if_need()
         self.camera.scale = self.current_camera_scale
 

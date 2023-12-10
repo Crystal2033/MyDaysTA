@@ -80,7 +80,7 @@ class PlayerCharacter(arcade.Sprite):
         self.hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time: float = 1 / 60):
-
+        print("ANIMATION")
         # Figure out if we need to flip face left or right
         if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
             self.character_face_direction = LEFT_FACING
@@ -99,6 +99,10 @@ class PlayerCharacter(arcade.Sprite):
         self.texture = self.walk_textures[self.cur_texture][
             self.character_face_direction
         ]
+
+    def stop_player(self):
+        self.change_x = 0
+        self.change_y = 0
 
     def move_to_path(self, next_point):
         start_x = self.center_x
@@ -126,9 +130,9 @@ class PlayerCharacter(arcade.Sprite):
         speed = min(self.speed, distance)
 
         # Calculate vector to travel
-        change_x = math.cos(angle) * speed
-        change_y = math.sin(angle) * speed
+        self.change_x = math.cos(angle) * speed
+        self.change_y = math.sin(angle) * speed
 
-        # Update our location
-        self.center_x += change_x
-        self.center_y += change_y
+        # # Update our location
+        # self.center_x += change_x
+        # self.center_y += change_y
