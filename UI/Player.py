@@ -29,7 +29,7 @@ def load_texture_pair(filename):
 class PlayerCharacter(arcade.Sprite):
     """Player Sprite"""
 
-    def __init__(self, speed, path):
+    def __init__(self, speed):
 
         # Set up parent class
         super().__init__()
@@ -80,7 +80,6 @@ class PlayerCharacter(arcade.Sprite):
         self.hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time: float = 1 / 60):
-        print("ANIMATION")
         # Figure out if we need to flip face left or right
         if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
             self.character_face_direction = LEFT_FACING

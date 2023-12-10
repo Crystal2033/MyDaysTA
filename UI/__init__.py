@@ -7,6 +7,7 @@ import arcade
 import pyglet.math
 
 from Mechanic import ModelMechanic
+from Mechanic.Mood import Mood
 from Mechanic.ObserverPattern.Subscriber import Subscriber
 from Mechanic.states.STATE_NAMES import STATES
 from UI.Player import PlayerCharacter
@@ -35,7 +36,7 @@ PLAYER_START_Y = 150
 class MechanicWithUiSharedData:
     def __init__(self):
         self.timer_text_view = ""
-        self.mood_text_view = ""
+        self.mood_text_view = Mood.NORMAL
         self.current_state_text_view = STATES.SLEEP
 
 
@@ -67,6 +68,7 @@ class MyGame(arcade.Window):
     def __init__(self):
         # Call the parent class and set up the window
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        self.center_window()
         # Separate variable that holds the player sprite
         self.player_sprite = None
 
@@ -86,8 +88,6 @@ class MyGame(arcade.Window):
         self.path = None
         # List of points we checked to see if there is a barrier there
         self.barrier_list = None
-
-
 
         # Our Scene Object
         self.scene = None
@@ -160,7 +160,7 @@ class MyGame(arcade.Window):
 
         # Set up the player, specifically placing it at these coordinates.
 
-        self.player_sprite = PlayerCharacter(PLAYER_MOVEMENT_SPEED, self.path)
+        self.player_sprite = PlayerCharacter(PLAYER_MOVEMENT_SPEED)
         self.player_sprite.center_x = PLAYER_START_X
         self.player_sprite.center_y = PLAYER_START_Y
         self.scene.add_sprite("Player", self.player_sprite)
@@ -179,10 +179,10 @@ class MyGame(arcade.Window):
 
         # Calculate the playing field size. We can't generate paths outside of
         # this.
-        playing_field_left_boundary = -SCREEN_WIDTH * 2
-        playing_field_right_boundary = SCREEN_WIDTH * 2
-        playing_field_top_boundary = SCREEN_HEIGHT * 2
-        playing_field_bottom_boundary = -SCREEN_HEIGHT * 2
+        playing_field_left_boundary = -SCREEN_WIDTH
+        playing_field_right_boundary = SCREEN_WIDTH
+        playing_field_top_boundary = SCREEN_HEIGHT
+        playing_field_bottom_boundary = -SCREEN_HEIGHT
 
         # This calculates a list of barriers. By calculating it here in the
         # init, we are assuming this list does not change. In this example,
@@ -289,8 +289,6 @@ class MyGame(arcade.Window):
         # Move the player with the physics engine
         self.physics_engine.update()
 
-
-
         # Set to True if we can move diagonally. Note that diagonal movement
         # might cause the enemy to clip corners.
         if self.destination_point:
@@ -306,7 +304,6 @@ class MyGame(arcade.Window):
         else:
             if self.destination_point:
                 self.player_sprite.stop_player()
-
 
         # Update Animations
         self.scene.update_animation(
@@ -326,18 +323,18 @@ class MyGame(arcade.Window):
         # Activate the GUI camera before drawing GUI elements
         self.gui_camera.use()
         # Draw our score on the screen, scrolling it with the viewport
-        score_text = f"Score: {self.mech_ui_shared_data.timer_text_view}"
+        score_text = f"Time: {self.mech_ui_shared_data.timer_text_view} Mood: {self.mech_ui_shared_data.mood_text_view.name}"
         arcade.draw_text(
             score_text,
             10,
             10,
-            arcade.csscolor.WHITE,
+            arcade.csscolor.BLACK,
             18,
         )
 
         arcade.draw_text(
             f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
-            500,
+            600,
             10,
             arcade.csscolor.BLACK,
             18,
@@ -345,7 +342,7 @@ class MyGame(arcade.Window):
 
         arcade.draw_text(
             f"State: {self.mech_ui_shared_data.current_state_text_view.name}",
-            900,
+            1000,
             10,
             arcade.csscolor.BLACK,
             18,
