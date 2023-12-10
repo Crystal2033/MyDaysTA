@@ -38,6 +38,7 @@ class MechanicWithUiSharedData:
         self.timer_text_view = ""
         self.mood_text_view = Mood.NORMAL
         self.current_state_text_view = STATES.SLEEP
+        self.is_able_to_change_mood = False
 
 
 class ViewChanger(Subscriber):
@@ -55,9 +56,16 @@ class ViewChanger(Subscriber):
     def updateByNotify(self):
         self._ui_view_info.timer_text_view = self.mech.get_current_time_and_date()
         self._ui_view_info.mood_text_view = self.mech.get_mood()
+        self._ui_view_info.current_state_text_view, self._ui_view_info.is_able_to_change_mood = self.mech.get_state()
 
     def stop(self):
         self.mech.stop()
+
+    def is_able_to_change_mood(self):
+        return self._ui_view_info.is_able_to_change_mood
+
+    def check_set_ability_to_change_mood(self, ability):
+        self._ui_view_info.is_able_to_change_mood = ability
 
 
 class MyGame(arcade.Window):
@@ -121,8 +129,8 @@ class MyGame(arcade.Window):
         self.view_changer = ViewChanger(self.mech_ui_shared_data)
         # MECHANIC
 
-        self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
-
+        #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+        self.destination_point = None
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int):
@@ -223,36 +231,43 @@ class MyGame(arcade.Window):
             self.is_camera_follow_player = True
         elif key == arcade.key.KEY_1:
             self.mech_ui_shared_data.current_state_text_view = STATES.SLEEP
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_2:
             self.mech_ui_shared_data.current_state_text_view = STATES.EAT
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_3:
             self.mech_ui_shared_data.current_state_text_view = STATES.REST
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_4:
             self.mech_ui_shared_data.current_state_text_view = STATES.UNIVERSITY
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_5:
             self.mech_ui_shared_data.current_state_text_view = STATES.ROAD
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_6:
             self.mech_ui_shared_data.current_state_text_view = STATES.PC
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_7:
             self.mech_ui_shared_data.current_state_text_view = STATES.HOBBY
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_8:
             self.mech_ui_shared_data.current_state_text_view = STATES.WALK
-            self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+            #self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         elif key == arcade.key.KEY_0:
             self.destination_point = None
+        elif key == arcade.key.H:
+            self.view_changer.check_set_ability_to_change_mood(False)
+        elif key == arcade.key.Y:
+            self.view_changer.check_set_ability_to_change_mood(True)
         elif key == arcade.key.B:
-            self.view_changer.set_new_mood(Mood.BAD)
+            if self.view_changer.is_able_to_change_mood():
+                self.view_changer.set_new_mood(Mood.BAD)
         elif key == arcade.key.N:
-            self.view_changer.set_new_mood(Mood.NORMAL)
+            if self.view_changer.is_able_to_change_mood():
+                self.view_changer.set_new_mood(Mood.NORMAL)
         elif key == arcade.key.G:
-            self.view_changer.set_new_mood(Mood.GOOD)
+            if self.view_changer.is_able_to_change_mood():
+                self.view_changer.set_new_mood(Mood.GOOD)
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
@@ -321,6 +336,8 @@ class MyGame(arcade.Window):
             delta_time, ["Player"]
         )
 
+        self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
+
     def on_draw(self):
         """Render the screen."""
         self.clear()
@@ -334,12 +351,20 @@ class MyGame(arcade.Window):
         # Activate the GUI camera before drawing GUI elements
         self.gui_camera.use()
         # Draw our score on the screen, scrolling it with the viewport
-        score_text = f"Time: {self.mech_ui_shared_data.timer_text_view} Mood: {self.mech_ui_shared_data.mood_text_view.name}"
+
         arcade.draw_text(
-            score_text,
+            f"Time: {self.mech_ui_shared_data.timer_text_view}",
             10,
             10,
             arcade.csscolor.BLACK,
+            18,
+        )
+
+        arcade.draw_text(
+            f"Mood: {self.mech_ui_shared_data.mood_text_view.name}",
+            400,
+            10,
+            arcade.csscolor.GREEN if (self.view_changer.is_able_to_change_mood()) else arcade.csscolor.RED,
             18,
         )
 

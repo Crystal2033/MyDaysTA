@@ -1,10 +1,12 @@
 import threading
 import time
+from datetime import datetime
 
 from Mechanic.Mood import MoodChanger, Mood
 from Mechanic.ObserverPattern.Publisher import Publisher
 from Mechanic.ObserverPattern.Subscriber import Subscriber
 from Mechanic.WeekTimer import WeekTimer, TimerSpeedStates, DaysPerWeek
+from Mechanic.states.DayStatesChanger import DayStatesChanger
 from Mechanic.states.FridayState import FridayState
 from Mechanic.states.MondayState import MondayState
 from Mechanic.states.SaturdayState import SaturdayState
@@ -24,12 +26,14 @@ class ModelMechanic(Subscriber, Publisher):
         #     self._moodChangerVar.get_mood()
         # )
         # print("-----------------------------------------------")
-
-        self.notify()  # for future UI
+        # states has list of essential times. If current time is essential, than getState. Else nothing. Not working...
+        #
+        self.current_state_automat = self._states[self._weekTimerVar.get_current_day()]
+        self.notify()  # for UI
 
     def __init__(self):
         super().__init__()
-        self._weekTimerVar = WeekTimer(TimerSpeedStates.NORMAL)
+        self._weekTimerVar = WeekTimer(TimerSpeedStates.SEMIFAST)
         self._moodChangerVar = MoodChanger()
         self._states = {
             DaysPerWeek.SUNDAY: SundayState(),
@@ -40,9 +44,14 @@ class ModelMechanic(Subscriber, Publisher):
             DaysPerWeek.FRIDAY: FridayState(),
             DaysPerWeek.SATURDAY: SaturdayState(),
         }
+        self.current_state_automat: DayStatesChanger = self._states[DaysPerWeek.SUNDAY]
 
         self._weekTimerVar.attach(self)
         self._moodChangerVar.attach(self)
+
+    def get_state(self):
+        return self.current_state_automat.get_state(datetime.strptime(self._weekTimerVar.get_current_time(), "%H:%M"),
+                                                    self._moodChangerVar.get_mood())
 
     def make_mood_worse(self, amount_of_worse_units: int):
         thread = threading.Thread(target=self.mood_worse_thread, args=(amount_of_worse_units,))

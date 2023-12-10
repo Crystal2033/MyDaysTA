@@ -63,7 +63,7 @@ class WeekTimer(Publisher):
     def increase_timer(self):
         sleep_ms_by_timer_speed_states = {TimerSpeedStates.SLOW: 0.2,
                                           TimerSpeedStates.NORMAL: 0.05,
-                                          TimerSpeedStates.SEMIFAST: 0.01,
+                                          TimerSpeedStates.SEMIFAST: 0.025,
                                           TimerSpeedStates.FAST: 0.005}
         while self._timerSpeedState is not TimerSpeedStates.STOP:
             sleep(sleep_ms_by_timer_speed_states[self._timerSpeedState])
