@@ -16,7 +16,7 @@ class MondayState(DayStatesChanger):
             TimeEdgeAndChangeAbility("09:00", True),
             TimeEdgeAndChangeAbility("14:30", True),
             TimeEdgeAndChangeAbility("16:00", True),
-            TimeEdgeAndChangeAbility("16:40", False),
+            TimeEdgeAndChangeAbility("16:40", True),
             TimeEdgeAndChangeAbility("18:00", False),
             TimeEdgeAndChangeAbility("21:30", True),
             TimeEdgeAndChangeAbility("22:10", True),

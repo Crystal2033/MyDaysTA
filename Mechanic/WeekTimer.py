@@ -75,11 +75,11 @@ class WeekTimer(Publisher):
                                           TimerSpeedStates.SEMIFAST: 0.025,
                                           TimerSpeedStates.FAST: 0.005}
         is_just_started = True
-
+        print("Started")
         while self._timerSpeedState is not TimerSpeedStates.STOP:
             sleep(sleep_ms_by_timer_speed_states[self._timerSpeedState])
             self._currentMinutes = next(self._possibleMinutes)
-            print("Thread")
+
             if self._currentMinutes == 0:
                 self._currentHours = next(self._possibleHours)
                 if self._currentHours == 0:
@@ -88,6 +88,5 @@ class WeekTimer(Publisher):
                     else:
                         is_just_started = False
                     self._currentDayOfWeek = self._possibleDaysOfWeek[self._current_day_index]
-            print(f"{self.get_current_time()} and {self.get_current_day()}")
             self.notify()
             # print(f'{self.get_current_time()} at {self._currentDayOfWeek.name}')

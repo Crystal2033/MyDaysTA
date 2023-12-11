@@ -90,6 +90,7 @@ class MyGame(arcade.Window):
         self.center_window()
         # Separate variable that holds the player sprite
         self.player_sprite = None
+        self.is_started_now = True
 
         self.destinations = {
             STATES.SLEEP: (472, 246),
@@ -136,7 +137,6 @@ class MyGame(arcade.Window):
         self.view_changer = ViewChanger(self.mech_ui_shared_data)
         # MECHANIC
 
-        # self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         self.destination_point = None
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
@@ -190,7 +190,6 @@ class MyGame(arcade.Window):
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite, self.scene.get_sprite_list("Walls")
         )
-        self.view_changer.start_changes()
 
         self.path = None
         # Grid size for calculations. The smaller the grid, the longer the time
@@ -329,6 +328,7 @@ class MyGame(arcade.Window):
 
         self.destination_point = self.destinations[self.mech_ui_shared_data.current_state_text_view]
         self.player_sprite.set_new_player_speed_by_time_velocity(self.mech_ui_shared_data.time_speed)
+        self.player_sprite.set_new_state(self.mech_ui_shared_data.current_state_text_view)
 
     def on_draw(self):
         """Render the screen."""
@@ -340,6 +340,10 @@ class MyGame(arcade.Window):
             self.center_camera_to_player()
 
         self.scene.draw()
+
+        if self.is_started_now:
+            self.is_started_now = False
+            self.view_changer.start_changes()
         # Activate the GUI camera before drawing GUI elements
         self.gui_camera.use()
         # Draw our score on the screen, scrolling it with the viewport

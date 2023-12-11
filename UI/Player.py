@@ -8,6 +8,7 @@ import math
 import arcade
 
 from Mechanic.WeekTimer import TimerSpeedStates
+from Mechanic.states.STATE_NAMES import STATES
 
 # Constants used to scale our sprites from their original size
 
@@ -61,7 +62,19 @@ class PlayerCharacter(arcade.Sprite):
         main_path = ":resources:images/animated_characters/male_adventurer/maleAdventurer"
 
         # Load textures for idle standing
-        self.idle_texture_pair = load_texture_pair(f"{main_path}_idle.png")
+
+        self.idle_texture_basic_pair = load_texture_pair(f"{main_path}_idle.png")
+
+        self.idle_textures_states_pairs = []
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_sleep2.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_eat.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_rest.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_university.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_road.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_pc.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_hobby.png"))
+        self.idle_textures_states_pairs.append(load_texture_pair(f"{main_path}_idle_walk.png"))
+
         self.jump_texture_pair = load_texture_pair(f"{main_path}_jump.png")
         self.fall_texture_pair = load_texture_pair(f"{main_path}_fall.png")
 
@@ -71,22 +84,25 @@ class PlayerCharacter(arcade.Sprite):
             texture = load_texture_pair(f"{main_path}_walk{i}.png")
             self.walk_textures.append(texture)
 
-        # Load textures for climbing
-        self.climbing_textures = []
-        texture = arcade.load_texture(f"{main_path}_climb0.png")
-        self.climbing_textures.append(texture)
-        texture = arcade.load_texture(f"{main_path}_climb1.png")
-        self.climbing_textures.append(texture)
+        # # Load textures for climbing
+        # self.climbing_textures = []
+        # texture = arcade.load_texture(f"{main_path}_climb0.png")
+        # self.climbing_textures.append(texture)
+        # texture = arcade.load_texture(f"{main_path}_climb1.png")
+        # self.climbing_textures.append(texture)
 
         # Set the initial texture
-        self.texture = self.idle_texture_pair[0]
+        self.texture = self.idle_texture_basic_pair[0]
 
         # Hit box will be set based on the first image used. If you want to specify
         # a different hit box, you can do it like the code below.
         # set_hit_box = [[-22, -64], [22, -64], [22, 28], [-22, 28]]
         self.set_hit_box = self.texture.hit_box_points
 
+        self.current_state = None
+
     def update_animation(self, delta_time: float = 1 / 60):
+        self.angle = 0
         # Figure out if we need to flip face left or right
         if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
             self.character_face_direction = LEFT_FACING
@@ -95,7 +111,12 @@ class PlayerCharacter(arcade.Sprite):
 
         # Idle animation
         if self.change_x == 0 and self.change_y == 0:
-            self.texture = self.idle_texture_pair[self.character_face_direction]
+            if self.current_state:
+                self.texture = self.idle_textures_states_pairs[self.current_state.value][self.character_face_direction]
+                if self.current_state == STATES.SLEEP:
+                    self.angle = -90
+            else:
+                self.texture = self.idle_texture_basic_pair[self.character_face_direction]
             return
 
         # Walking animation
@@ -105,6 +126,9 @@ class PlayerCharacter(arcade.Sprite):
         self.texture = self.walk_textures[self.cur_texture][
             self.character_face_direction
         ]
+
+    def set_new_state(self, state: STATES):
+        self.current_state = state
 
     def set_new_player_speed_by_time_velocity(self, time_speed: TimerSpeedStates):
         if time_speed == TimerSpeedStates.SLOW:
