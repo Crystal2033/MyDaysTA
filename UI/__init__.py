@@ -38,6 +38,7 @@ class MechanicWithUiSharedData:
         self.timer_text_view = ""
         self.mood_text_view = Mood.NORMAL
         self.current_state_text_view = STATES.SLEEP
+        self.next_state_text_view = STATES.SLEEP
         self.is_able_to_change_mood = False
         self.time_speed = TimerSpeedStates.NORMAL
 
@@ -62,6 +63,7 @@ class ViewChanger(Subscriber):
         self._ui_view_info.mood_text_view = self.mech.get_mood()
         self._ui_view_info.current_state_text_view, self._ui_view_info.is_able_to_change_mood = self.mech.get_state()
         self._ui_view_info.time_speed = self.mech.get_time_speed()
+        self._ui_view_info.next_state_text_view = self.mech.get_next_state()
 
     def stop(self):
         self.mech.stop()
@@ -220,7 +222,6 @@ class MyGame(arcade.Window):
                                                     playing_field_right_boundary,
                                                     playing_field_bottom_boundary,
                                                     playing_field_top_boundary)
-        print("test")
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
@@ -353,23 +354,24 @@ class MyGame(arcade.Window):
 
         arcade.draw_text(
             f"Mood: {self.mech_ui_shared_data.mood_text_view.name}",
-            400,
+            SCREEN_WIDTH * 0.3,
             10,
             arcade.csscolor.GREEN if (self.view_changer.is_able_to_change_mood()) else arcade.csscolor.RED,
             18,
         )
 
-        arcade.draw_text(
-            f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
-            600,
-            10,
-            arcade.csscolor.BLACK,
-            18,
-        )
+        # arcade.draw_text(
+        #     f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
+        #     SCREEN_WIDTH * 0.4,
+        #     10,
+        #     arcade.csscolor.BLACK,
+        #     18,
+        # )
 
         arcade.draw_text(
-            f"State: {self.mech_ui_shared_data.current_state_text_view.name}",
-            1000,
+            f"State: {self.mech_ui_shared_data.current_state_text_view.name} "
+            f"-> {self.mech_ui_shared_data.next_state_text_view.name}",
+            SCREEN_WIDTH * 0.7,
             10,
             arcade.csscolor.BLACK,
             18,

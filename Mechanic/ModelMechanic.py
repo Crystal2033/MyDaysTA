@@ -22,6 +22,8 @@ class ModelMechanic(Subscriber, Publisher):
     def updateByNotify(self):
         self.current_state_automat = self._states[self._weekTimerVar.get_current_day()]
         self._time_speed = self._weekTimerVar.get_timer_speed()
+
+        print(self._weekTimerVar.get_current_time())
         self.notify()  # for UI
 
     def __init__(self):
@@ -46,6 +48,9 @@ class ModelMechanic(Subscriber, Publisher):
     def get_state(self):
         return self.current_state_automat.get_state(datetime.strptime(self._weekTimerVar.get_current_time(), "%H:%M"),
                                                     self._moodChangerVar.get_mood())
+
+    def get_next_state(self):
+        return self.current_state_automat.get_next_state()
 
     def set_new_time_speed(self, time_speed: TimerSpeedStates):
         self._weekTimerVar.change_timer_speed_state(time_speed)

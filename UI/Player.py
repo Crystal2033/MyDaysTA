@@ -17,11 +17,11 @@ CHARACTER_SCALING = 5 / 30
 RIGHT_FACING = 0
 LEFT_FACING = 1
 
-
 SLOW_SPEED = 2
 NORMAL_SPEED = 4
 SEMIFAST_SPEED = 8
 FAST_SPEED = 16
+
 
 def load_texture_pair(filename):
     """
@@ -84,7 +84,7 @@ class PlayerCharacter(arcade.Sprite):
         # Hit box will be set based on the first image used. If you want to specify
         # a different hit box, you can do it like the code below.
         # set_hit_box = [[-22, -64], [22, -64], [22, 28], [-22, 28]]
-        self.hit_box = self.texture.hit_box_points
+        self.set_hit_box = self.texture.hit_box_points
 
     def update_animation(self, delta_time: float = 1 / 60):
         # Figure out if we need to flip face left or right
@@ -116,7 +116,6 @@ class PlayerCharacter(arcade.Sprite):
         elif time_speed == TimerSpeedStates.FAST:
             self.speed = FAST_SPEED
 
-
     def stop_player(self):
         self.change_x = 0
         self.change_y = 0
@@ -144,7 +143,7 @@ class PlayerCharacter(arcade.Sprite):
 
         # How fast should we go? If we are close to our destination,
         # lower our speed so we don't overshoot.
-        speed = min(self.speed, distance)
+        speed = min(float(self.speed), distance)
 
         # Calculate vector to travel
         self.change_x = math.cos(angle) * speed

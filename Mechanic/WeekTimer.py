@@ -8,20 +8,20 @@ from Mechanic.ObserverPattern.Publisher import Publisher
 
 
 class TimerSpeedStates(Enum):
-    STOP = 0,
-    SLOW = 1,
-    NORMAL = 2,
-    SEMIFAST = 3,
+    STOP = 0
+    SLOW = 1
+    NORMAL = 2
+    SEMIFAST = 3
     FAST = 4
 
 
 class DaysPerWeek(Enum):
-    SUNDAY = 0,
-    MONDAY = 1,
-    TUESDAY = 2,
-    WEDNESDAY = 3,
-    THURSDAY = 4,
-    FRIDAY = 5,
+    SUNDAY = 0
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+    THURSDAY = 4
+    FRIDAY = 5
     SATURDAY = 6
 
 
@@ -30,22 +30,28 @@ class WeekTimer(Publisher):
     def __init__(self, timer_init_speed: TimerSpeedStates):
         super().__init__()
         self._timerSpeedState = timer_init_speed
+        self._current_day_index = 0
+        self._currentDayOfWeek = None
         self._possibleHours = cycle([i for i in range(24)])
         self._possibleMinutes = cycle([i for i in range(60)])
-        self._possibleDaysOfWeek = cycle([DaysPerWeek.SUNDAY,
-                                          DaysPerWeek.MONDAY,
-                                          DaysPerWeek.TUESDAY,
-                                          DaysPerWeek.WEDNESDAY,
-                                          DaysPerWeek.THURSDAY,
-                                          DaysPerWeek.FRIDAY,
-                                          DaysPerWeek.SATURDAY])
+        self._possibleDaysOfWeek = [DaysPerWeek.SUNDAY,
+                                    DaysPerWeek.MONDAY,
+                                    DaysPerWeek.TUESDAY,
+                                    DaysPerWeek.WEDNESDAY,
+                                    DaysPerWeek.THURSDAY,
+                                    DaysPerWeek.FRIDAY,
+                                    DaysPerWeek.SATURDAY]
         self._currentHours = 0
         self._currentMinutes = 0
-        self._currentDayOfWeek = DaysPerWeek.SUNDAY
+        self.set_start_day(DaysPerWeek.MONDAY)
         self._timerThread = threading.Thread(target=self.increase_timer)
 
     def start(self):
         self._timerThread.start()
+
+    def set_start_day(self, start_day: DaysPerWeek):
+        self._currentDayOfWeek = start_day
+        self._current_day_index = self._currentDayOfWeek.value
 
     def stop(self):
         self.change_timer_speed_state(TimerSpeedStates.STOP)
@@ -68,13 +74,20 @@ class WeekTimer(Publisher):
                                           TimerSpeedStates.NORMAL: 0.05,
                                           TimerSpeedStates.SEMIFAST: 0.025,
                                           TimerSpeedStates.FAST: 0.005}
+        is_just_started = True
+
         while self._timerSpeedState is not TimerSpeedStates.STOP:
             sleep(sleep_ms_by_timer_speed_states[self._timerSpeedState])
             self._currentMinutes = next(self._possibleMinutes)
+            print("Thread")
             if self._currentMinutes == 0:
                 self._currentHours = next(self._possibleHours)
                 if self._currentHours == 0:
-                    self._currentDayOfWeek = next(self._possibleDaysOfWeek)
-
+                    if not is_just_started:
+                        self._current_day_index = (self._current_day_index + 1) % 7
+                    else:
+                        is_just_started = False
+                    self._currentDayOfWeek = self._possibleDaysOfWeek[self._current_day_index]
+            print(f"{self.get_current_time()} and {self.get_current_day()}")
             self.notify()
             # print(f'{self.get_current_time()} at {self._currentDayOfWeek.name}')

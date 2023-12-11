@@ -25,9 +25,14 @@ class DayStatesChanger:
         self.last_updated_mood = Mood.NORMAL
         self.list_of_times_and_abilities = []
 
+    def get_next_state(self) -> STATES:
+        if self.next_time_index > len(self.list_of_times_and_abilities) - 1:  # Current state is last for that day
+            return STATES.SLEEP
+        return self.get_state_by_correct_arguments(
+            self.list_of_times_and_abilities[self.next_time_index].time,
+            self.last_updated_mood)
+
     def get_state(self, time, mood: Mood):
-        # if self.next_time_index > len(self.list_of_times_and_abilities) - 1:
-        #     self._reset()
         if time == datetime.strptime("00:00", "%H:%M"):
             self._reset()
 

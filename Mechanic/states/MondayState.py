@@ -26,20 +26,28 @@ class MondayState(DayStatesChanger):
         state = None
         if time == self.list_of_times_and_abilities[0].time:  # 00:00
             state = STATES.SLEEP
-        elif time == self.list_of_times_and_abilities[1].time:  # 10:00
+        elif time == self.list_of_times_and_abilities[1].time:  # 06:50
             state = STATES.EAT
-        elif time == self.list_of_times_and_abilities[2].time:  # 10:25
-            state = STATES.PC
-        elif time == self.list_of_times_and_abilities[3].time:  # 14:00
-            state = STATES.EAT
+        elif time == self.list_of_times_and_abilities[2].time:  # 07:30
+            state = STATES.ROAD
+        elif time == self.list_of_times_and_abilities[3].time:  # 09:00
+            state = STATES.UNIVERSITY
         elif time == self.list_of_times_and_abilities[4].time:  # 14:30
-            state = STATES.REST
-        elif time == self.list_of_times_and_abilities[5].time:  # 15:30
-            state = STATES.PC
-        elif time == self.list_of_times_and_abilities[6].time:  # 21:30
+            state = STATES.ROAD
+        elif time == self.list_of_times_and_abilities[5].time:  # 16:00
             state = STATES.EAT
-        elif time == self.list_of_times_and_abilities[7].time:  # 22:00
+        elif time == self.list_of_times_and_abilities[6].time:  # 16:40
+            state = STATES.REST
+        elif time == self.list_of_times_and_abilities[7].time:  # 18:00
+            if self.last_updated_mood == Mood.BAD:
+                state = STATES.HOBBY
+            else:
+                state = STATES.PC
+        elif time == self.list_of_times_and_abilities[8].time:  # 21:30
+            state = STATES.EAT
+        elif time == self.list_of_times_and_abilities[9].time:  # 22:10
             state = STATES.HOBBY
         if not state:
+            print("Fullness of system was interrupted")
             exit(-1)
         return state
