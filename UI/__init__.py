@@ -138,7 +138,7 @@ class MyGame(arcade.Window):
         # MECHANIC
 
         self.destination_point = None
-        arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
+        arcade.set_background_color((119, 137, 29))
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int):
         super().on_mouse_motion(x, y, dx, dy)
@@ -352,23 +352,15 @@ class MyGame(arcade.Window):
             f"Time: {self.mech_ui_shared_data.timer_text_view}",
             10,
             10,
-            arcade.csscolor.BLACK,
-            18,
+            arcade.csscolor.WHITE,
+            20,
         )
 
         arcade.draw_text(
             f"Mood: {self.mech_ui_shared_data.mood_text_view.name}",
-            SCREEN_WIDTH * 0.3,
+            SCREEN_WIDTH * 0.5,
             10,
-            arcade.csscolor.GREEN if (self.view_changer.is_able_to_change_mood()) else arcade.csscolor.RED,
-            18,
-        )
-
-        arcade.draw_text(
-            f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
-            SCREEN_WIDTH * 0.6,
-            10,
-            arcade.csscolor.BLACK,
+            arcade.csscolor.DARK_GREEN if (self.view_changer.is_able_to_change_mood()) else arcade.csscolor.RED,
             18,
         )
 
@@ -377,13 +369,13 @@ class MyGame(arcade.Window):
             f"-> {self.mech_ui_shared_data.next_state_text_view.name}",
             SCREEN_WIDTH * 0.8,
             10,
-            arcade.csscolor.BLACK,
-            18,
+            arcade.csscolor.WHITE,
+            20,
         )
 
-        if self.path:
-            self.move_path_by_camera()
-            arcade.draw_line_strip(self.path, arcade.color.BLUE, 2)
+        #if self.path:
+            #self.move_path_by_camera()
+            #arcade.draw_line_strip(self.path, arcade.color.BLUE, 2)
 
         self.move_camera_if_need()
         self.camera.scale = self.current_camera_scale
