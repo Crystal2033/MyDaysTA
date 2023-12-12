@@ -93,13 +93,13 @@ class MyGame(arcade.Window):
         self.is_started_now = True
 
         self.destinations = {
-            STATES.SLEEP: (472, 246),
-            STATES.EAT: (464, 318),
-            STATES.REST: (250, 172),
+            STATES.SLEEP: (504, 248),
+            STATES.EAT: (465, 324),
+            STATES.REST: (274, 174),
             STATES.UNIVERSITY: (986, 689),
             STATES.ROAD: (378, 575),
-            STATES.PC: (482, 156),
-            STATES.HOBBY: (275, 298),
+            STATES.PC: (468, 160),
+            STATES.HOBBY: (298, 304),
             STATES.WALK: (776, 362),
         }
 
@@ -364,18 +364,18 @@ class MyGame(arcade.Window):
             18,
         )
 
-        # arcade.draw_text(
-        #     f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
-        #     SCREEN_WIDTH * 0.4,
-        #     10,
-        #     arcade.csscolor.BLACK,
-        #     18,
-        # )
+        arcade.draw_text(
+            f"({self.player_sprite.center_x},{self.player_sprite.center_y})",
+            SCREEN_WIDTH * 0.6,
+            10,
+            arcade.csscolor.BLACK,
+            18,
+        )
 
         arcade.draw_text(
             f"State: {self.mech_ui_shared_data.current_state_text_view.name} "
             f"-> {self.mech_ui_shared_data.next_state_text_view.name}",
-            SCREEN_WIDTH * 0.7,
+            SCREEN_WIDTH * 0.8,
             10,
             arcade.csscolor.BLACK,
             18,
