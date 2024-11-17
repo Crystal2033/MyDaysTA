@@ -1,6 +1,3 @@
-"""
-Platformer Game
-"""
 import tkinter as tk
 
 import arcade
@@ -58,7 +55,7 @@ class ViewChanger(Subscriber):
     def start_changes(self):
         self.mech.start()
 
-    def updateByNotify(self):
+    def update_by_notify(self):
         self._ui_view_info.timer_text_view = self.mech.get_current_time_and_date()
         self._ui_view_info.mood_text_view = self.mech.get_mood()
         self._ui_view_info.current_state_text_view, self._ui_view_info.is_able_to_change_mood = self.mech.get_state()
@@ -372,10 +369,6 @@ class MyGame(arcade.Window):
             arcade.csscolor.WHITE,
             20,
         )
-
-        #if self.path:
-            #self.move_path_by_camera()
-            #arcade.draw_line_strip(self.path, arcade.color.BLUE, 2)
 
         self.move_camera_if_need()
         self.camera.scale = self.current_camera_scale

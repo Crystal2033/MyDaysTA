@@ -19,7 +19,7 @@ from Mechanic.states.WednesdayState import WednesdayState
 # week timer notify -> mech notify -> UI
 # mood changes notify -> mech notify -> UI
 class ModelMechanic(Subscriber, Publisher):
-    def updateByNotify(self):
+    def update_by_notify(self):
         self.current_state_automat = self._states[self._weekTimerVar.get_current_day()]
         self._time_speed = self._weekTimerVar.get_timer_speed()
 

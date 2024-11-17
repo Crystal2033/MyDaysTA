@@ -113,8 +113,7 @@ class PlayerCharacter(arcade.Sprite):
         if self.change_x == 0 and self.change_y == 0:
             if self.current_state:
                 self.texture = self.idle_textures_states_pairs[self.current_state.value][self.character_face_direction]
-                #if self.current_state == STATES.SLEEP:
-                    # self.angle = -90
+
             else:
                 self.texture = self.idle_texture_basic_pair[self.character_face_direction]
             return
